@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="Evaluating mathematical reasoning of foundation models in visual contexts">
+  <meta name="keywords" content="BLADE, BLADE Benchmark">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title> BLADE: Benchmarking Language Model Agents for Data-Driven Science</title>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script> -->
+  <!-- <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+/Users/panlu/Library/Mobile Documents/com~apple~CloudDocs/ImageMath/visual-mathqa-server/data_final/images
+    gtag('js', new Date());
+
+    gtag('config', 'G-PYVRSFMDRL');
+  </script> -->
+
+  <link rel="icon" href="./static/images/blade-logo.png">
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="stylesheet" href="./static/css/leaderboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
+  <!-- <link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator_bulma.min.css" rel="stylesheet">
+  <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.min.js"></script> -->
+  <script type="text/javascript" src="static/js/sort-table.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/explorer-index.js"></script>
+  <script src="./static/js/question_card.js"></script>
+
+  <script src="./static/js/leaderboard_testmini.js"></script>
+  <script src="./data/results/output_folders.js" defer></script>
+  <script src="./data/results/model_scores.js" defer></script>
+
+  <script src="./visualizer/data/data_public.js" defer></script>
+</head>
+<style>
+  table {
+    width: 80%;
+    /* Adjust this to your preference */
+    margin: auto;
+    /* Center the table */
+    border-collapse: collapse;
+    /* Combine borders */
+  }
+
+  th,
+  td {
+    padding: 5px 10px;
+    /* Adjust padding for smaller size */
+    font-size: 0.8em;
+    /* Decrease font size */
+    border: 1px solid #ddd;
+    /* Add a border for better visibility */
+    text-align: left;
+    /* Align text to the left */
+  }
+
+  th {
+    background-color: #f2f2f2;
+    /* Light background for headers */
+  }
+
+  caption {
+    font-size: 1.1em;
+    /* Slightly larger caption */
+    margin: 10px 0;
+    /* Space above and below the caption */
+  }
+</style>
+
+<body>
+
+  <nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+    <div class="navbar-menu">
+      <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
+        <!-- <a class="navbar-item" href="https://keunhong.com">
+      <span class="icon">
+          <i class="fas fa-home"></i>
+      </span>
+      </a> -->
+        <!-- @PAN TODO: consider adding links? -->
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            More Research
+          </a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://dl.acm.org/doi/full/10.1145/3613904.3641891">
+              <b>How Do Data Analysts Respond to AI Assistance? A Wizard-of-Oz Study?</b>
+              <p style="font-size:18px; display: inline; margin-left: 5px;">🪄</p>
+            </a>
+            <a class="navbar-item" href="https://dl.acm.org/doi/10.1145/3613904.3642497">
+              <b>How Do Analysts Understand and Verify AI-Assisted Data Analyses? </b>
+              <p style="font-size:18px; display: inline; margin-left: 5px;">👩‍💻</p>
+            </a>
+            <!-- <a class="navbar-item" href="https://scienceqa.github.io/">
+              <b>ScienceQA</b>
+              <p style="font-size:18px; display: inline; margin-left: 5px;">🔥</p>
+            </a>
+            <a class="navbar-item" href="https://github.com/OpenGVLab/LLaMA-Adapter">
+              <b>LLaMA-Adapter (V2)</b>
+              <p style="font-size:18px; display: inline; margin-left: 5px;">🔥</p>
+            </a>
+            <a class="navbar-item" href="https://promptpg.github.io/">
+              PromptPG
+            </a>
+            <a class="navbar-item" href="https://arxiv.org/abs/2307.10635">
+              SciBench
+            </a>
+            <a class="navbar-item" href="https://arxiv.org/abs/2305.12524">
+              TheoremQA
+            </a>
+            <a class="navbar-item" href="https://lila.apps.allenai.org/">
+              Lila
+            </a>
+            <a class="navbar-item" href="https://iconqa.github.io/">
+              IconQA
+            </a>
+            <a class="navbar-item" href="https://lupantech.github.io/inter-gps/">
+              Inter-GPS
+            </a> -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title is-bold">
+              <img src="static/images/blade-logo.png" style="width:1em;vertical-align: middle" alt="Logo" />
+              <span class="mathvista" style="vertical-align: middle">BLADE</span>
+            </h1>
+            <h2 class="subtitle is-3 publication-subtitle">
+              Benchmarking Language Model Agents <br>for Data-Driven Science
+              <!-- <br> -->
+              <!-- with GPT-4V, Bard, and Other Large Multimodal Models -->
+            </h2>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">
+                <a href="https://kenqgu.com">Ken Gu</a><sup style="color:#4b2e83;">1</sup>,
+              </span>
+              <span class="author-block">
+                <a href="https://ruoxishang.com/">Ruoxi Shang</a><sup style="color:#4b2e83;">1</sup>,
+              </span>
+              <span class="author-block">
+                <a href="">Ruien Jiang</a><sup style="color:#003262;">2</sup><sup>*</sup>,
+              </span>
+              <span class="author-block">
+                <a href="">Keying Kuang</a><sup style="color:#003262;">2</sup><sup>*</sup>,
+              </span>
+              <span class="author-block">
+                <a href="">Richard-John Lin</a><sup style="color:#57068c;">3</sup><sup>*</sup>,
+              </span><br>
+              <span class="author-block">
+                <a href="">Donghe Lyu</a><sup style="color:#8c1515;">4</sup><sup>*</sup>,
+              </span>
+              <span class="author-block">
+                <a href="">Yue Mao</a><sup style="color:#002145;">5</sup><sup>*</sup>,
+              </span>
+              <span class="author-block">
+                <a href="">Youran Pan</a><sup style="color:#57068c;">3</sup><sup>*</sup>,
+              </span>
+              <span class="author-block">
+                <a href="">Teng Wu</a><sup style="color:#737373;">6</sup><sup>*</sup>,
+              </span>
+              <span class="author-block">
+                <a href="">Jiaqian Yu</a><sup style="color:#002855;">7</sup><sup>*</sup>,
+              </span>
+              <span class="author-block">
+                <a href="">Yikun Zhang</a><sup style="color:#4b2e83;">1</sup><sup>*</sup>,
+              </span><br>
+              <span class="author-block">
+                <a href="">Tianmai M. Zhang</a><sup style="color:#4b2e83;">1</sup><sup>*</sup>,
+              </span>
+              <span class="author-block">
+                <a href="">Lanyi Zhu</a><sup style="color:#4b2e83;">1</sup><sup>*</sup>,
+              </span>
+              <span class="author-block">
+                <a href="https://mikemerrill.io">Mike A. Merrill</a><sup style="color:#4b2e83;">1</sup>,
+              </span>
+              <span class="author-block">
+                <a href="https://homes.cs.washington.edu/~jheer/">Jeffrey Heer</a><sup style="color:#4b2e83;">1</sup>,
+              </span>
+              <span class="author-block">
+                <a href="https://homes.cs.washington.edu/~althoff/">Tim Althoff</a><sup style="color:#4b2e83;">1</sup>
+              </span>
+            </div>
+
+            <div class="is-size-5 publication-authors">
+              <span class="author-block"><sup style="color:#4b2e83;">1</sup>University of Washington,</span>
+              <span class="author-block"><sup style="color:#003262;">2</sup>UC Berkeley,</span><br>
+              <span class="author-block"><sup style="color:#57068c;">3</sup>New York University,</span>
+              <span class="author-block"><sup style="color:#8c1515;">4</sup>Stanford University,</span><br>
+              <span class="author-block"><sup style="color:#002145;">5</sup>University of British Columbia,</span>
+              <span class="author-block"><sup style="color:#737373;">6</sup>Microsoft,</span>
+              <span class="author-block"><sup style="color:#002855;">7</sup>George Washington University</span><br>
+              <a href="https://2024.emnlp.org/"><span class="paper-block"><b style="color:#f41c1c">EMNLP
+                    2024</b></span></a><br>
+              <span style="font-size: 0.7em;"><sup>*</sup>Denotes equal contribution</span> <br>
+            </div>
+
+
+
+            <!-- <section> -->
+            <!-- <div class="section" id="org-banners" style="display:fle">
+              <a href="https://www.ucla.edu/" target="_blank" rel="external">
+                  <img class="center-block org-banner" src="static/images/ucla.png" style="height:3em">
+              </a>
+              <a href="https://www.washington.edu/" target="blank" class="ext-link">
+                  <img class="center-block org-banner" src="static/images/uw.png" style="height:3em">
+              </a>
+              <a href="https://www.microsoft.com/en-us/research/" target="_blank" rel="external">
+                  <img class="center-block org-banner" src="static/images/microsoft.png" style="height:3em">
+              </a>
+            </div> -->
+            <!-- </section> -->
+
+            <div class="column has-text-centered">
+              <div class="publication-links">
+                <!-- PDF Link. -->
+                <span class="link-block">
+                  <!-- @PAN TODO: change links -->
+                  <a href="https://arxiv.org/pdf/2408.09667" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                    </span>
+                    <span>Paper</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="https://arxiv.org/abs/2408.09667" class="external-link button is-normal is-rounded is-dark">
+                    <!-- <a href="https://lupantech.github.io/papers/arxiv23_mathvista.pdf"
+                   class="external-link button is-normal is-rounded is-dark"> -->
+                    <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                    </span>
+                    <span>arXiv</span>
+                  </a>
+                </span>
+                <!-- Video Link. -->
+                <!-- <span class="link-block">
+                <a href="https://www.youtube.com/watch?v=MrKrnHhk8IA"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-youtube"></i>
+                  </span>
+                  <span>Video</span>
+                </a>
+              </span> -->
+                <!-- Code Link. -->
+                <span class="link-block">
+                  <a href="https://github.com/behavioral-data/BLADE"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fab fa-github"></i>
+                    </span>
+                    <span>Code</span>
+                  </a>
+                </span>
+                <!-- Dataset Link. -->
+                <!-- <span class="link-block"> -->
+                <!-- <a href="https://huggingface.co/datasets/AI4Math/MathVista" -->
+                <!-- class="external-link button is-normal is-rounded is-dark"> -->
+                <!-- <span class="icon"> -->
+                <!-- <i class="far fa-images"></i> -->
+                <!-- <p style="font-size:18px">🤗</p> -->
+                <!-- 🔗 -->
+                <!-- </span>
+                    <span>Dataset</span>
+                  </a>
+                </span> -->
+                <!-- Visualization Link. -->
+                <!-- <span class="link-block">
+                  <a href="https://mathvista.github.io/#visualization"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <p style="font-size:18px">🔮</p>
+                    </span>
+                    <span>Visualize</span>
+                  </a>
+                </span> -->
+                <!-- Leaderboard Link. -->
+                <!-- <span class="link-block">
+                  <a href="https://mathvista.github.io/#leaderboard"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <p style="font-size:18px">🏆</p>
+                    </span>
+                    <span>Leaderboard</span>
+                  </a>
+                </span> -->
+                <!-- Twitter Link. -->
+                <span class="link-block">
+                  <a href="https://x.com/kenqgu/status/1826360431029731822"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <!-- <i class="far fa-images"></i> -->
+                      <!-- 💻🔗 -->
+                      <i class="fab fa-twitter"></i>
+                      <!-- <p style="font-size:18px">🌐</p> -->
+                    </span>
+                    <span>Tweet</span>
+                  </a>
+                </span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+
+
+  <section class="section">
+    <div class="container" style="margin-top: -150px; margin-bottom: -100px;">
+      <div class="columns is-centered m-6">
+        <div class="column is-full has-text-centered content">
+          <div id="results-carousel" class="carousel results-carousel">
+            <div class="box m-5">
+              <div class="content ">
+                <img src="static/images/blade-teaser.png" alt="BLADE Main Image" width="90%" />
+                <p>
+                  <img src="static/images/blade-logo.png" style="width:1.0em;vertical-align: middle" alt="Logo" />
+                  <span class="mathvista">BLADE</span> automatically evaluates on the <b> intermediate decisions</b> (3)
+                  to <b> open-ended</b> data-driven research questions (1). We gathered research questions and datasets
+                  from existing research papers, crowd-sourced analysis studies and statistic textbooks as well as
+                  analyses
+                  from expert annotators (boxes 1-2-3).
+                  Given a research question and dataset, LM agents generate a full
+                  analysis containing the relevant conceptual variables, a data transform function, and a statistical
+                  modeling function (boxes 1-4-5).
+                  <img src="static/images/blade-logo.png" style="width:1.0em;vertical-align: middle" alt="Logo" />
+                  <span class="mathvista">BLADE</span> automatically evaluates this against the ground truth.
+
+                </p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/blade-dataset-overview.png" alt="BLADE Dataset Overview" width="64%" />
+                <p> <img src="static/images/blade-logo.png" style="width:1.0em;vertical-align: middle" alt="Logo" />
+                  <span class="mathvista">BLADE</span> consists of real-world open-ended research questions. These
+                  questions
+                  naturally elicit <b>justifiable alternative</b> decisions, from data preprocessing to statistical
+                  modeling. We
+                  aim to capture this flexibility in our ground truth annoation process.
+                </p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/blade-main-results.png" alt="BLADE Main Results" width="84%" />
+                <p> We evaluate open source and close source LMs on <img src="static/images/blade-logo.png"
+                    style="width:1.0em;vertical-align: middle" alt="Logo" />
+                  <span class="mathvista">BLADE</span> in both a <b>one turn direct prompting</b> setting and a <b>ReAct
+                    agent</b>
+                  setting in
+                  which the agent can interact with a sandbox notebook environment. The best setting achieves a F1-score
+                  of 44.8% leaving lots of room for improvement.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  </section>
+
+
+  <section class="section">
+    <div class="container" style="margin-bottom: 2vh;">
+      <!-- Abstract. -->
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Abstract</h2>
+          <div class="content has-text-justified">
+            <p>
+              Data-driven scientific discovery requires the iterative integration of
+              scientific domain knowledge, statistical expertise, and an understanding of
+              data semantics to make nuanced analytical decisions, such as which variables,
+              transformations, and statistical models to consider. LM-based agents
+              equipped with planning, memory, and code execution capabilities have
+              the potential to support data-driven science; however, evaluating these
+              agents on open-ended tasks is challenging due to multiple valid approaches,
+              partially correct steps, and different ways to express the same decisions.
+            </p>
+            <p>
+              To address these challenges, we present <img src="static/images/blade-logo.png"
+                style="width:1.0em;vertical-align: middle" alt="Logo" />
+              <span class="mathvista">BLADE</span>, a benchmark designed to
+              automatically evaluate agents’ multifaceted approaches to open-ended
+              research questions. <img src="static/images/blade-logo.png" style="width:1.0em;vertical-align: middle"
+                alt="Logo" />
+              <span class="mathvista">BLADE</span> consists of 12 datasets and research questions
+              drawn from existing scientific literature, with ground truth collected
+              from independent analyses by expert data scientists and researchers. To
+              facilitate the automatic evaluation of agent responses, we developed
+              computational methods that match different representations of analyses
+              to this ground truth. Although language models possess considerable world
+              knowledge, our evaluation shows they are often limited to basic analyses;
+              in contrast, agents capable of interacting with the underlying
+              data demonstrate improved, yet still non-optimal, diversity
+              in their analytical decision-making. Our work enables the evaluation
+              of agents in the context of data-driven science and provides researchers
+              with deeper insights into the analytical approaches employed by these agents.
+
+          </div>
+        </div>
+      </div>
+      <!--/ Abstract. -->
+    </div>
+  </section>
+
+
+  <!-- DATASET SECTION -->
+  <section class="hero is-light is-small">
+    <div class="hero-body has-text-centered">
+      <!-- <h1 class="title is-1 mathvista"><img src="static/images/mathvista.png" style="width:1.0em;vertical-align: middle" alt="Logo"/>MathVista Dataset</h1> -->
+      <h1 class="title is-1 mathvista">
+        <img src="static/images/blade-logo.png" style="width:1em;vertical-align: middle" alt="Logo" />
+        <span class="mathvista" style="vertical-align: middle">BLADE Dataset</span>
+      </h1>
+    </div>
+  </section>
+
+
+  <section class="section">
+    <div class="container">
+      <div class="columns is-centered has-text-centered">
+        <!-- <div class="column is-full-width has-text-centered"> -->
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Overview</h2>
+          <div class="content has-text-justified">
+            <p>
+              <img src="static/images/blade-logo.png" style="width:1.0em;vertical-align: middle" alt="Logo" />
+              <span class="mathvista">BLADE</span> is an expert annotated benchmark studying agent performance on
+              <b>open-ended</b> data-driven research questions (there is no single answer result).
+              <img src="static/images/blade-logo.png" style="width:1.0em;vertical-align: middle" alt="Logo" />
+              <span class="mathvista">BLADE</span> evaluates how well agents can understand data, integrate this with
+              external scientific
+              domain knowledge, and execute an analysis. In particular, <img src="static/images/blade-logo.png"
+                style="width:1.0em;vertical-align: middle" alt="Logo" />
+              <span class="mathvista">BLADE</span> focuses on the following tasks, :
+              <!-- a compilation of data 1) carefully examined and filtered from 28 existing VQA and MathQA datasets and 2) manually collected by us. In total, 6,141 examples were collected from 31 different datasets. -->
+            </p>
+            <ul>
+              <li><b>Formulating Conceptual Variables</b>: Recognize independent variables (IVs) , dependent variables
+                (DVs),
+                and control variables based on domain knowledge and multi-step reasoning, e.g.,
+                ``Prior literature suggests player physicality influences the referee’s perception. We can consider
+                physicality a control.''</li>
+              <li><b>Executing Data Transformations</b>: Apply transformations to operationalize conceptual variables,
+                e.g., using BMI as a proxy for player physicality via ``weight'' and ``height''
+                columns.</li>
+              <li><b>Implementing Statistical Models</b>: Choose the appropriate statistical model based on conceptual
+                variables and
+                transformed data to address the research question,
+                requiring in-depth knowledge of statistical methods and the underlying hypothesis</li>
+            </ul>
+
+            <p>
+              We source research
+              questions from existing crowd-sourced
+              analysis studies and statistics textbooks. We follow a rigourous multi-stage annotation procedure to
+              ensure annotation
+              quality. <img src="static/images/blade-logo.png" style="width:1.0em;vertical-align: middle" alt="Logo" />
+              <span class="mathvista">BLADE</span> currently consists of <b>12 research questions and datasets</b>
+              encompassing over 500
+              analysis decisions.
+            </p>
+
+            <div id="results-carousel" class="carousel results-carousel">
+
+              <div class="box m-5">
+                <div class="content has-text-justified">
+                  <div class="content has-text-centered">
+
+                    <img src="static/images/blade-related-comparison.png" alt="algebraic reasoning" width="95%" />
+                  </div>
+
+                  <p> Examples of tasks in our work and related benchmarks.
+                    <img src="static/images/blade-logo.png" style="width:1.0em;vertical-align: middle" alt="Logo" />
+                    <span class="mathvista">BLADE</span> prioritizes open-ended research questions and considers the
+                    flexibility of analysis approaches in its evaluation.
+                  </p>
+                </div>
+              </div>
+              <div class="box m-5">
+                <div class="content has-text-justified">
+                  <div class="content has-text-centered">
+                    <img src="static/images/blade-annotation-process.png" alt="algebraic reasoning" width="90%" />
+                  </div>
+                  <p>
+                    <img src="static/images/blade-logo.png" style="width:1.0em;vertical-align: middle" alt="Logo" />
+
+                    <span class="mathvista">BLADE</span> follows a multi-stage annotation procedure to ensure
+                    ground-truth
+                    annotation quality.
+                    First, annotators independetly conduct their own analysis given a research question and dataset and
+                    report their analysis decisions (1).
+                    Next, each annotator reviews the analysis decisions of the other annotators and those generated by a
+                    LM to validate each other's approach and also consider new potentially overlooked approaches (2).
+                    Finally, annotators come together, discuss their analysis decisions and reach a consensus on the
+                    ground-truth analysis decisions (3).
+                    <br>
+                  </p>
+                </div>
+              </div>
+              <div class="box m-5">
+                <div class="content has-text-centered">
+                  <img src="static/images/blade-dataset-info.png" alt="arithmetic reasoning" width="60%" />
+                  <p> Summary of the 12 different source datasets in <img src="static/images/blade-logo.png"
+                      style="width:1.0em;vertical-align: middle" alt="Logo" />
+                    <span class="mathvista">BLADE</span>.
+                </div>
+              </div>
+            </div>
+
+
+
+          </div>
+        </div>
+      </div>
+      <!-- <div class="content">
+        <div class="column is-centered ">
+
+          <table>
+            <caption>Comparison of task examples in BLADE and related benchmarks</caption>
+            <thead>
+              <tr>
+                <th colspan="4">BLADE</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Question</td>
+                <td>Are soccer players with a dark skin tone more likely than those with a light skin tone to receive
+                  red
+                  cards from referees?</td>
+                <td>How do age, sex, and receiving help from another chimpanzee influence the nut-cracking efficiency of
+                  western chimpanzees?</td>
+                <td>Does 'Reader View' – a modified web page layout – improves reading speed for individuals with
+                  dyslexia?
+                </td>
+              </tr>
+              <tr>
+                <td>Answer(s)</td>
+                <td><i>16</i> conceptual variables, <i>77</i> transformations, and <i>41</i> modeling decisions</td>
+                <td><i>11</i> conceptual variables, <i>19</i> transformations, and <i>31</i> modeling decisions</td>
+                <td><i>18</i> conceptual variables, <i>24</i> transformations, and <i>12</i> modeling decisions</td>
+              </tr>
+              <thead>
+                <tr>
+                  <th colspan="4">ARCADE</th>
+                </tr>
+              </thead>
+              <tr>
+                <td>Question</td>
+                <td>How many male and female employees are born in 1992?</td>
+                <td>Which countries host at least two Olympic games?</td>
+                <td>What is the most expensive phone in each brand?</td>
+              </tr>
+              <tr>
+                <td>Answer(s)</td>
+                <td>Two number counts</td>
+                <td>A list of country names</td>
+                <td>Dataframe of brand, model, and price</td>
+              </tr>
+              <thead>
+
+                <tr>
+                  <th colspan="4">DABench</th>
+                </tr>
+              </thead>
+              <tr>
+                <td>Question</td>
+                <td>Calculate the correlation coefficient between the "High Price" column and the "Low Price" column.
+                </td>
+                <td>Calculate the mean fare paid by the passengers.</td>
+                <td>Categorize passengers into age groups and calculate mean fare for each group.</td>
+              </tr>
+              <tr>
+                <td>Answer(s)</td>
+                <td>["relationship_type", "linear"], ["correlation_coefficient", "0.99"]</td>
+                <td>["mean_fare", "34.65"]</td>
+                <td>["mean_fare_elderly", "43.47"], ["mean_fare_teenager", "31.98"], ["mean_fare_child", "31.09"],
+                  ["mean_fare_adult", "35.17"]</td>
+              </tr>
+              <thead>
+
+                <tr>
+                  <th colspan="4">MLAgentBench</th>
+                </tr>
+              </thead>
+              <tr>
+                <td>Question</td>
+                <td><code>[CIFAR-10]</code> Given a training script on a dataset train.py, improve upon the current
+                  model
+                  performance (trained with current hyperparameters in train.py). The training epochs should be within
+                  10
+                  to
+                  save time.</td>
+                <td><code>[Feedback]</code> Go through the data_description.txt file to understand the data and all the
+                  features. You can summarize it in your research logs to keep track of what all you have to do. Then
+                  fill
+                  in the provided train.py script to train a model and iterate over different models or feature
+                  selections
+                  to get a better performance.</td>
+                <td><code>[IMDB]</code> Fill out train.py to 1) finetune DistilBERT on the IMDb dataset to determine
+                  whether
+                  a movie review is positive or negative and 2) save per class probabilities for test set examples to
+                  submission.csv.</td>
+              </tr>
+              <tr>
+                <td>Answer(s)</td>
+                <td>Predictions for ML classification</td>
+                <td>Predictions for ML regression</td>
+                <td>Predictions for ML classification</td>
+              </tr>
+              <thead>
+                <tr>
+                  <th colspan="4">DS-Agent</th>
+                </tr>
+              </thead>
+              <tr>
+                <td>Question</td>
+                <td><code>[Airline Reviews]</code> You are solving this machine learning tasks of regression: The
+                  dataset
+                  presented here (Airline reviews) comprises customer feedback for British Airways. Here, we provide the
+                  text reviews. Your task is to predict the corresponding rating in the range of {1-10} given the
+                  reviews
+                  in
+                  the test set. The evaluation metric is root mean squared error (RMSE).</td>
+                <td><code>[Bitcoin Price Prediction]</code> You are solving this machine learning tasks of regression:
+                  The
+                  dataset presented here (the BTC News to Bitcoin Price dataset) comprises a series of BTC news title.
+                  Your
+                  task is to predict the bitcoin price based on the given BTC news title in the test set. The evaluation
+                  metric is root mean squared error (RMSE).</td>
+                <td><code>[BoolQ]</code> You are solving this machine learning tasks of classification: The dataset
+                  presented here (the BoolQ dataset) comprises a series of passage-question pairs. Given a passage and a
+                  question, your task is to identify whether the question can be inferred from the passage, with 0 as
+                  False
+                  and 1 as True. The evaluation metric is accuracy.</td>
+              </tr>
+              <tr>
+                <td>Answer(s)</td>
+                <td>Predictions for ML regression</td>
+                <td>Predictions for ML regression</td>
+                <td>Predictions for ML classification</td>
+              </tr>
+              <thead>
+                <tr>
+                  <th colspan="4">ML-Benchmark for Data Interpreter</th>
+                </tr>
+              </thead>
+              <tr>
+                <td>Question</td>
+                <td><code>[Titanic]</code> This is a Titanic passenger survival dataset, and your goal is to predict
+                  passenger survival outcomes. The target column is Survived. Perform data analysis, data preprocessing,
+                  feature engineering, and modeling to predict the target. Report accuracy on the eval data.</td>
+                <td><code>[Santander Customer]</code> This is a customer’s financial dataset. Your goal is to predict
+                  which
+                  customers will make a specific transaction in the future. The target column is the target. Perform
+                  data
+                  analysis, data preprocessing, feature engineering, and modeling to predict the target. Report AUC on
+                  the
+                  eval data.</td>
+                <td><code>[Santander Value]</code> This is a medical dataset with over fifty anonymized health
+                  characteristics linked to three age-related conditions. Your goal is to predict whether a subject has
+                  or
+                  has not been diagnosed with one of these conditions. The target column is Class. Perform data
+                  analysis...
+                  the target. Report F1 Score on the eval data.</td>
+              </tr>
+              <tr>
+                <td>Answer(s)</td>
+                <td>Predictions for ML classification</td>
+                <td>Predictions for ML classification</td>
+                <td>Predictions for ML regression</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div> -->
+
+
+
+
+      <!-- <div class="columns is-centered m-6">
+        <div class="column is-full has-text-centered content">
+          <h2 class="title is-3">Examples</h2>
+          <p>One example for each <b>mathematical reasoning</b> skill required in <img src="static/images/mathvista.png"
+              style="width:1.0em;vertical-align: middle" alt="Logo" />
+            <span class="mathvista">MathVista</span>
+          </p>
+
+          <div id="results-carousel" class="carousel results-carousel">
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/examples/ari.png" alt="arithmetic reasoning" width="60%" />
+                <p>Arithmetic Reasoning</p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/examples/alg.png" alt="algebraic reasoning" width="60%" />
+                <p>Algebraic Reasoning</p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/examples/geo.png" alt="geometric reasoning" width="60%" />
+                <p>Geometric Reasoning</p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/examples/log.png" alt="logical reasoning" width="60%" />
+                <p>Logical Reasoning</p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/examples/num.png" alt="numeric reasoning" width="60%" />
+                <p>Numeric Reasoning</p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/examples/sta.png" alt="statistical reasoning" width="60%" />
+                <p>Statistical Reasoning</p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/examples/sci.png" alt="scientific reasoning" width="60%" />
+                <p>Scientific Reasoning</p>
+              </div>
+            </div>
+
+
+          </div>
+
+          <br><br>
+          <p>One example for each <b>visual context</b> type required in <img src="static/images/mathvista.png"
+              style="width:1.0em;vertical-align: middle" alt="Logo" />
+            <span class="mathvista">MathVista</span>
+          </p>
+
+          <div id="results-carousel" class="carousel results-carousel">
+
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/contexts/1_Geometry_Diagram.png" alt="arithmetic reasoning" width="80%" />
+                <p>Geometry Diagram</p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/contexts/2_Synthetic_Scene.png" alt="arithmetic reasoning" width="80%" />
+                <p>Synthetic Scene</p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/contexts/3_Bar_Chart.png" alt="arithmetic reasoning" width="65%" />
+                <p>Bar Chart</p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/contexts/4_Natural_Image.png" alt="arithmetic reasoning" width="80%" />
+                <p>Natural Image</p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/contexts/5_Scientific_Figure.png" alt="arithmetic reasoning" width="80%" />
+                <p>Scientific Figure</p>
+              </div>
+            </div>
+
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/contexts/6_Table.png" alt="arithmetic reasoning" width="80%" />
+                <p>Table</p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/contexts/7_Function_Plot.png" alt="arithmetic reasoning" width="80%" />
+                <p>Function Plot</p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/contexts/8_Abstract_Scene.png" alt="arithmetic reasoning" width="80%" />
+                <p>Abstract Scene</p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/contexts/9_Puzzle_Test.png" alt="arithmetic reasoning" width="80%" />
+                <p>Puzzle Test</p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/contexts/10_Scatter_Plot.png" alt="arithmetic reasoning" width="80%" />
+                <p>Scatter Plot</p>
+              </div>
+            </div>
+
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/contexts/11_Line_Plot.png" alt="arithmetic reasoning" width="80%" />
+                <p>Line Plot</p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/contexts/12_Pie_Chart.png" alt="arithmetic reasoning" width="75%" />
+                <p>Pie Chart</p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/contexts/13_Document_Image.png" alt="arithmetic reasoning" width="80%" />
+                <p>Document Image</p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/contexts/14_Medical_Image.png" alt="arithmetic reasoning" width="80%" />
+                <p>Medical Image</p>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-centered">
+                <img src="static/images/contexts/15_Others.png" alt="arithmetic reasoning" width="45%" />
+                <p>Others</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div> -->
+      <div class="columns is-centered m-6">
+        <div class="column is-centered has-text-centered content is-four-fifths">
+          <h2 class="title is-4">Input to BLADE's Evaluation</h2>
+
+
+
+          <div class="content has-text-justified">
+            <p>
+              Given a research question and data table, the agent's submission of an analysis to BLADE is a JSON file
+              containing
+              the following elements:
+            </p>
+            <ul>
+              <li><b>A list of conceptual variables</b>: Each conceptual variable contains a natural language
+                description (e.g., player physicality) and the variable type (i.e., independent, dependent, and
+                control variable) to answer the research question.</li>
+              <li><b>An executable transformation function</b>: The function takes a data table and returns the table
+                after performing ALL transformations to operationalize the variables.</li>
+              <li><b>A statistical model function</b>: This takes as input the transformed data table and returns the
+                specified statistical model</li>
+            </ul>
+
+          </div>
+          <div class="content has-text-centered">
+            <img src="static/images/blade-generated-analysis.png" alt="data-overview" style="max-width: 80%;" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS SECTION -->
+  <section class="hero is-light is-small">
+    <div class="hero-body has-text-centered">
+      <h1 class="title is-1 mathvista">Experimental Results</h1>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <div class="content has-text-justified">
+
+            <p>
+              We evaluate open source and close source LMs on <img src="static/images/blade-logo.png"
+                style="width:1.0em;vertical-align: middle" alt="Logo" />
+              <span class="mathvista">BLADE</span> in both a <b>one turn direct prompting</b> setting and a <b>ReAct
+                agent</b>
+              setting in
+              which the agent can interact with a sandbox computational notebook environment.
+            </p>
+          </div>
+          <div class="content has-text-centered">
+            <h2 class="title is-4">Overall Perfomance</h2>
+            <div class="content has-text-centered">
+              <img src="static/images/blade-main-results.png" alt="data-overview" style="max-width: 80%;" />
+            </div>
+          </div>
+          <div class="content has-text-justified">
+            The best performing models get aroung ~40% F1 score on <img src="static/images/blade-logo.png"
+              style="width:1.0em;vertical-align: middle" alt="Logo" />
+            <span class="mathvista">BLADE</span> indicating that there is still a lot of room for improvement.
+            Generally, the ReAct agent outperforms the one turn direct prompting setting.
+          </div>
+        </div>
+      </div>
+
+
+      <div class="columns is-centered m-6">
+        <div class="column is-full has-text-centered content is-four-fifths">
+
+          <h2 class="title is-4">Most language models can generate non-empty executable analyses</h2>
+          <img src="static/images/blade-result-type.png" alt="data-overview" style="max-width: 95%;" />
+          <div class="has-text-justified">
+            <p>
+              For generating an analysis, we find that most large LMs can generate a non-empty executable analysis
+              over
+              60% of the time, with GPT-4o being the best at 96%. Among the open-source models, Mixtral-8x22b performs
+              best,
+              generating an executable analysis 73% of the time and DeepSeek-Coder also does surprisingly well at 65%.
+            </p>
+          </div>
+          <br>
+          <h2 class="title is-4">Language models are limited to forming basic analyses</h2>
+          <!-- <p>One example for each reasoning skill required in <span class="mathvista">MathVista</span></p> -->
+          <div class="content has-text-centered">
+            <img src="static/images/blade-results-by-decision-type.png" alt="data-overview" style="max-width: 100%;" />
+            <div class="has-text-justified">
+              <p style="font-size: 0.8em;">
+                Average precision (top row) and coverage@10 (bottom row) percentages averaged across datasets in <img
+                  src="static/images/blade-logo.png" style="width:1.0em;vertical-align: middle" alt="Logo" />
+                <span class="mathvista">BLADE</span>. All runs were included in the results.
+                Run errors default to a hit rate of 0 and are counted in the coverage calculation (i.e., treated as a
+                run
+                that generated nothing).
+                Error bars represent bootstrapped 95% confidence intervals.
+              </p>
+            </div>
+          </div>
+          <div class="has-text-justified">
+
+            <p>We also observe low coverage of the ground truth examples, especially with respect to data
+              transformations and specific model specifications.
+              Through qualitatively reviewing a random sample of LM-generated analyses, we find that LMs often perform
+              basic analysis that can yield decent precision (i.e., matching basic decisions) but poor coverage across
+              runs. However, comparing the one-turn and agent settings, LMs consistently had higher coverage when
+              allowed to iteratively explore data. Moreover,
+              ReAct agents perform best overall on coverage for data transformations and statistical modeling, which
+              require a more detailed understanding of data semantics.
+            </p>
+
+            <p>
+              See the examples of generated analyses using GPT-4o (one of the best performing LMs) via direct prompting
+              and the ReAct framework below.
+            </p>
+            <p>
+              <b>GPT-4o one turn direct prompting examples:</b>
+            </p>
+          </div>
+          <div id="results-carousel" class="carousel results-carousel">
+            <div class="box m-5">
+              <div class="content has-text-justified">
+                <pre style="font-size: 0.7em;"><code class="python"># ======== TRANSFORM CODE ========
+def transform(df: pd.DataFrame) -> pd.DataFrame:
+    # Filter out rows with missing values in rater1 and rater2
+    df = df.dropna(subset=['rater1', 'rater2'])
+    
+    # Calculate the average skin tone from rater1 and rater2
+    df['AvgSkinTone'] = df[['rater1', 'rater2']].mean(axis=1)
+    
+    # Return the transformed dataframe
+    return df
+
+# ======== MODEL CODE ========
+def model(df: pd.DataFrame) -> Any:
+    # Prepare the independent variables and control variables
+    X = df[['AvgSkinTone', 'games', 'yellowCards', 'meanIAT', 'meanExp']]
+    y = df['redCards']
+    
+    # Add a constant to the model (intercept)
+    X = sm.add_constant(X)
+    
+    # Perform the linear regression
+    model = sm.OLS(y, X).fit()
+    
+    # Return the results of the model
+    return model.summary() </code></pre>
+                <div class="content has-text-centered">
+                  <p>Ex. 1) answering the question <i>Are soccer players with a dark skin tone
+                      more likely than those with a light skin
+                      tone to receive red cards from referees?</i></p>
+                </div>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-justified">
+                <pre style="font-size: 0.7em;"><code class="python"># ======== TRANSFORM CODE ========
+def transform(df: pd.DataFrame) -> pd.DataFrame:
+    # Replace missing skin tone ratings with the mean rating
+    df['rater1'] = df['rater1'].fillna(df['rater1'].mean())
+    df['rater2'] = df['rater2'].fillna(df['rater2'].mean())
+
+    # Calculate the average skin tone rating
+    df['SkinTone'] = (df['rater1'] + df['rater2']) / 2
+
+    # Return the transformed dataframe with only necessary columns
+    return df[['SkinTone', 'redCards', 'games', 'meanIAT', 'meanExp']]
+
+
+# ======== MODEL CODE ========
+def model(df: pd.DataFrame) -> Any:
+    # Fit the regression model
+    X = df[['SkinTone', 'games', 'meanIAT', 'meanExp']]
+    y = df['redCards']
+    X = sm.add_constant(X)
+    model = sm.OLS(y, X).fit()
+    
+    # Return the model results
+    return model.summary()</code></pre>
+                <div class="content has-text-centered">
+                  <p>Ex. 2) answering the question <i>Are soccer players with a dark skin tone
+                      more likely than those with a light skin
+                      tone to receive red cards from referees?</i></p>
+                </div>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-justified">
+                <pre style="font-size: 0.7em;"><code class="python"># ======== TRANSFORM CODE ========
+def transform(df: pd.DataFrame) -> pd.DataFrame:
+    # Replace zero rating with NaN for rater columns indicating missing ratings
+    df['rater1'].replace(0, np.nan, inplace=True)
+    df['rater2'].replace(0, np.nan, inplace=True)
+    
+    # Drop rows where both 'rater1' and 'rater2' are NaN
+    df.dropna(subset=['rater1', 'rater2'], how='all', inplace=True)
+
+    # Calculate the average skin tone rating
+    df['avgSkinTone'] = df[['rater1', 'rater2']].mean(axis=1)
+    
+    # One-hot encode the position column
+    df = pd.get_dummies(df, columns=['position'], drop_first=True)
+    
+    return df
+
+# ======== MODEL CODE ========
+def model(df: pd.DataFrame) -> Any:
+    # Define the independent variables including controls
+    indep_vars = ['avgSkinTone', 'games', 'meanIAT', 'meanExp'] + [col for col in df.columns if col.startswith('position_')]
+    X = df[indep_vars]
+    
+    # Define the dependent variable
+    y = df['redCards']
+    
+    # Add a constant to the model (intercept)
+    X = sm.add_constant(X)
+    
+    # Fit the OLS model
+    model = sm.OLS(y, X)
+    results = model.fit()
+    
+    # Return the model summary
+    return results.summary()</code></pre>
+                <div class="content has-text-centered">
+                  <p>Ex. 3) answering the question <i>Are soccer players with a dark skin tone
+                      more likely than those with a light skin
+                      tone to receive red cards from referees?</i></p>
+                </div>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-justified">
+                <pre style="font-size: 0.7em;"><code class="python"># ======== TRANSFORM CODE ========
+def transform(df: pd.DataFrame) -> pd.DataFrame:
+    # Drop rows with missing values in the essential columns
+    df = df.dropna(subset=['rater1', 'rater2', 'redCards', 'meanIAT', 'meanExp', 'games'])
+    
+    # Calculate the average skin tone based on the two raters
+    df['AvgSkinTone'] = df[['rater1', 'rater2']].mean(axis=1)
+    
+    # Return the transformed dataframe ready for modeling
+    return df
+
+
+# ======== MODEL CODE ========
+def model(df: pd.DataFrame) -> Any:
+    # Define the independent variables (including control variables)
+    X = df[['AvgSkinTone', 'meanIAT', 'meanExp', 'games']]
+    
+    # Add a constant to the model (intercept)
+    X = sm.add_constant(X)
+    
+    # Define the dependent variable
+    y = df['redCards']
+    
+    # Fit an OLS regression model
+    model = sm.OLS(y, X).fit()
+    
+    # Return the summary of the model
+    return model.summary()
+                  </code></pre>
+                <div class="content has-text-centered">
+                  <p>Ex. 4) answering the question <i>Are soccer players with a dark skin tone
+                      more likely than those with a light skin
+                      tone to receive red cards from referees?</i></p>
+                </div>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-justified">
+                <pre style="font-size: 0.7em;"><code class="python"># ======== TRANSFORM CODE ========
+def transform(df: pd.DataFrame) -> pd.DataFrame:
+    # Replace zero rating with NaN for rater columns indicating missing ratings
+    df['rater1'].replace(0, np.nan, inplace=True)
+    df['rater2'].replace(0, np.nan, inplace=True)
+    
+    # Drop rows where both 'rater1' and 'rater2' are NaN
+    df.dropna(subset=['rater1', 'rater2'], how='all', inplace=True)
+
+    # Calculate the average skin tone rating
+    df['avgSkinTone'] = df[['rater1', 'rater2']].mean(axis=1)
+    
+    # One-hot encode the position column
+    df = pd.get_dummies(df, columns=['position'], drop_first=True)
+    
+    return df
+
+# ======== MODEL CODE ========
+def model(df: pd.DataFrame) -> Any:
+    # Define the independent variables including controls
+    indep_vars = ['avgSkinTone', 'games', 'meanIAT', 'meanExp'] + [col for col in df.columns if col.startswith('position_')]
+    X = df[indep_vars]
+    
+    # Define the dependent variable
+    y = df['redCards']
+    
+    # Add a constant to the model (intercept)
+    X = sm.add_constant(X)
+    
+    # Fit the OLS model
+    model = sm.OLS(y, X)
+    results = model.fit()
+    
+    # Return the model summary
+    return results.summary()</code></pre>
+                <div class="content has-text-centered">
+                  <p>Ex. 5) answering the question <i>Are soccer players with a dark skin tone
+                      more likely than those with a light skin
+                      tone to receive red cards from referees?</i></p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="has-text-justified">
+            <p><b>GPT-4o ReAct agent examples:</b></p>
+          </div>
+
+
+          <div id="results-carousel" class="carousel results-carousel">
+            <div class="box m-5">
+              <div class="content has-text-justified">
+                <pre style="font-size: 0.7em;"><code class="python"># ======== TRANSFORM CODE ========
+def transform(df: pd.DataFrame) -> pd.DataFrame:
+    # Drop rows with missing values in critical columns
+    df_clean = df.dropna(subset=['rater1', 'rater2', 'position', 'meanIAT', 'meanExp'])
+    
+    # Create a new column for the average skin tone rating
+    df_clean['avgSkinTone'] = df_clean[['rater1', 'rater2']].mean(axis=1)
+    
+    return df_clean
+
+
+# ======== MODEL CODE ========
+import statsmodels.api as sm
+
+def model(df: pd.DataFrame) -> sm.GLM:
+    # Define the control variables
+    control_vars = ['games', 'meanIAT', 'meanExp']
+    
+    # Create dummy variables for the categorical variable 'position'
+    df = pd.get_dummies(df, columns=['position'], drop_first=True)
+    
+    # Define the dependent variable
+    y = df['redCards']
+    
+    # Define the independent variables including dummy variables for position
+    X = df[['avgSkinTone'] + control_vars + [col for col in df.columns if col.startswith('position_')]]
+    
+    # Add a constant term to the independent variables
+    X = sm.add_constant(X)
+    
+    # Fit a Poisson regression model
+    poisson_model = sm.GLM(y, X, family=sm.families.Poisson()).fit()
+    
+    return poisson_model
+                  </code></pre>
+                <div class="content has-text-centered">
+                  <p>Ex. 1) answering the question <i>Are soccer players with a dark skin tone
+                      more likely than those with a light skin
+                      tone to receive red cards from referees?</i></p>
+                </div>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-justified">
+                <pre style="font-size: 0.7em;"><code class="python"># ======== TRANSFORM CODE ========
+def transform(df: pd.DataFrame) -> pd.DataFrame:
+    # Drop rows with missing 'skinTone'
+    df = df.dropna(subset=['skinTone'])
+
+    # Fill missing 'position' values with the most frequent value
+    most_frequent_position = df['position'].mode()[0]
+    df['position'] = df['position'].fillna(most_frequent_position)
+
+    # Create composite skin tone score
+    df['skinTone'] = df[['rater1', 'rater2']].mean(axis=1)
+
+    # Generate binary variable for skin tone
+    median_skin_tone = df['skinTone'].median()
+    df['skinToneCategory'] = df['skinTone'].apply(lambda x: 'Dark' if x > median_skin_tone else 'Light')
+
+    # Convert Red Cards to Binary
+    df['RedCardReceived'] = df['redCards'].apply(lambda x: 1 if x > 0 else 0)
+    
+    return df
+
+# ======== MODEL CODE ========
+def model(df: pd.DataFrame) -> Any:
+    import statsmodels.api as sm
+    import statsmodels.formula.api as smf
+
+    # Ensure categorical variables are treated as such
+    df['position'] = df['position'].astype('category')
+    df['refCountry'] = df['refCountry'].astype('category')
+    df['skinToneCategory'] = df['skinToneCategory'].astype('category')
+
+    # Simplify model by focusing on key variables
+    logit_model = smf.logit('RedCardReceived ~ skinToneCategory + games + C(refCountry)', data=df).fit()
+    
+    return logit_model.summary()</code></pre>
+                <div class="content has-text-centered">
+                  <p>Ex. 2) answering the question <i>Are soccer players with a dark skin tone
+                      more likely than those with a light skin
+                      tone to receive red cards from referees?</i></p>
+                </div>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-justified">
+                <pre style="font-size: 0.7em;"><code class="python"># ======== TRANSFORM CODE ========
+def transform(df: pd.DataFrame) -> pd.DataFrame:
+    # Calculate average skin tone rating
+    df['avgSkinTone'] = df[['rater1', 'rater2']].mean(axis=1)
+    
+    # Filter to include only players with valid skin tone ratings
+    df_filtered = df.dropna(subset=['avgSkinTone'])
+    
+    # Summarize data at the player level
+    df_player_level = df_filtered.groupby(['playerShort'], as_index=False).agg({
+        'avgSkinTone': 'mean',
+        'redCards': 'sum',
+        'games': 'sum',
+        'meanIAT': 'mean',
+        'meanExp': 'mean'
+    })
+    return df_player_level
+
+
+# ======== MODEL CODE ========
+def model(df: pd.DataFrame):
+    import statsmodels.api as sm
+    import statsmodels.formula.api as smf
+    
+    # Fit a negative binomial regression model
+    model = smf.glm('redCards ~ avgSkinTone + games + meanIAT + meanExp', 
+                    data=df, 
+                    family=sm.families.NegativeBinomial()).fit()
+    
+    return model.summary()</code></pre>
+                <div class="content has-text-centered">
+                  <p>Ex. 3) answering the question <i>Are soccer players with a dark skin tone
+                      more likely than those with a light skin
+                      tone to receive red cards from referees?</i></p>
+                </div>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-justified">
+                <pre style="font-size: 0.7em;"><code class="python"># ======== TRANSFORM CODE ========
+def transform(df: pd.DataFrame) -> pd.DataFrame:
+    # Drop rows with missing values in rater1 and rater2
+    df_cleaned = df.dropna(subset=['rater1', 'rater2'])
+    
+    # Calculate average skin tone score
+    df_cleaned['avgSkinTone'] = df_cleaned[['rater1', 'rater2']].mean(axis=1)
+    
+    # Select necessary columns
+    columns = ['avgSkinTone', 'redCards', 'games', 'victories', 'ties', 'defeats', 'position', 'meanIAT', 'meanExp']
+    df_final = df_cleaned[columns]
+    
+    return df_final
+
+# ======== MODEL CODE ========
+def model(df: pd.DataFrame) -> Any:
+    import statsmodels.formula.api as smf
+    
+    # Fit the regression model
+    model = smf.ols('redCards ~ avgSkinTone + games + victories + ties + defeats + C(position) + meanIAT + meanExp', data=df).fit()
+    
+    # Return the regression results
+    return model.summary()  </code></pre>
+                <div class="content has-text-centered">
+                  <p>Ex. 4) answering the question <i>Are soccer players with a dark skin tone
+                      more likely than those with a light skin
+                      tone to receive red cards from referees?</i></p>
+                </div>
+              </div>
+            </div>
+            <div class="box m-5">
+              <div class="content has-text-justified">
+                <pre style="font-size: 0.7em;"><code class="python"># ======== TRANSFORM CODE ========
+def transform(df: pd.DataFrame) -> pd.DataFrame:
+    # Calculate the average skin tone rating
+    df['avgSkinTone'] = df[['rater1', 'rater2']].mean(axis=1)
+
+    # Filter relevant columns
+    columns_to_keep = ['avgSkinTone', 'redCards', 'games', 'meanIAT', 'meanExp', 'position', 'goals', 'victories', 'ties', 'defeats']
+    df = df[columns_to_keep]
+
+    # Drop rows with missing values in the average skin tone
+    df = df.dropna(subset=['avgSkinTone'])
+
+    # One-hot encode the 'position' column
+    df = pd.get_dummies(df, columns=['position'], drop_first=True)
+
+    return df
+
+
+# ======== MODEL CODE ========
+def model(df: pd.DataFrame) -> Any:
+    import statsmodels.api as sm
+
+    # Define the dependent and independent variables
+    X = df.drop(columns=['redCards'])
+    y = df['redCards']
+
+    # Add a constant to the model
+    X = sm.add_constant(X)
+
+    # Fit the OLS model
+    ols_model = sm.OLS(y, X).fit()
+
+    return ols_model.summary()</code></pre>
+                <div class="content has-text-centered">
+                  <p>Ex. 5) answering the question <i>Are soccer players with a dark skin tone
+                      more likely than those with a light skin
+                      tone to receive red cards from referees?</i></p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <br>
+
+          <h2 class="title is-4">Stronger performance on code generation does not translate directly to performance on
+            <img src="static/images/blade-logo.png" style="width:1.0em;vertical-align: middle" alt="Logo" />
+            <span class="mathvista">BLADE</span>
+          </h2>
+          <img src="static/images/blade-results-compare-human-eval.png" alt="data-overview" style="max-width: 100%;" />
+          <p style="font-size: 0.8em;">
+            Performance vs. HumanEval Performance. We compare BLADE evaluation metrics against reported Pass@1 on
+            HumanEval.
+          </p>
+          <div class="has-text-justified">
+            <p>
+              When comparing our results in analysis generation with those from the HumanEval coding benchmark, we fonud
+              most metrics showed a positive correlation, indicating that higher HumanEval performance is broadly
+              correlated with higher BLADE performance.
+              However, coverage measures had a weaker correlation compared to precision. This suggests that while
+              current training methods,
+              such as Reinforcement Learning from Human Feedback (RLHF) and instruction tuning, optimize for one
+              solution, they may struggle to generate diverse solutions.
+          </div>
+        </div>
+      </div>
+  </section>
+
+
+  <!-- @PAN TODO: bibtex -->
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <h2 class="title is-3 has-text-centered">BibTeX</h2>
+      <pre><code>@inproceedings{
+  gu2024blade,
+  title={BLADE: Benchmarking Language Model Agents for Data-Driven Science},
+  author={Ken Gu and Ruoxi Shang and Ruien Jiang and Keying Kuang and Richard-John Lin and Donghe Lyu and Yue Mao and Youran Pan and Teng Wu and Jiaqian Yu and Yikun Zhang and Tianmai M. Zhang and Lanyi Zhu and Mike A. Merrill and Jeffrey Heer and Tim Althoff},
+  booktitle={The 2024 Conference on Empirical Methods in Natural Language Processing},
+  year={2024},
+  }</code></pre>
+    </div>
+  </section>
+
+  <section>
+    <div class="section" id="org-banners" style="display:flex">
+      <img class="center-block org-banner" src="static/images/affiliations/UW.png">
+      <img class="center-block org-banner" src="static/images/affiliations/ucb-crop.png">
+      <img class="center-block org-banner" src="static/images/affiliations/NYU-crop.png">
+      <img class="center-block org-banner" src="static/images/affiliations/stanford-1.png">
+      <img class="center-block org-banner" src="static/images/affiliations/ubc.png">
+      <img class="center-block org-banner" src="static/images/affiliations/microsoft.png">
+      <img class="center-block org-banner" src="static/images/affiliations/gwu.png">
+
+    </div>
+  </section>
+
+
+  <footer class="footer">
+    <!-- <div class="container"> -->
+    <div class="content has-text-centered">
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            This website is website adapted from <a href="https://nerfies.github.io/">Nerfies</a>, licensed under a
+            <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+              Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+    <!-- </div> -->
+  </footer>
+
+</body>
+
+</html>
